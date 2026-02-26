@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>團購助手</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 15px; background: #f4f7f6; }
+        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        textarea { width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 5px; padding: 10px; font-size: 14px; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-update { background-color: #00b900; }
+        .btn-notice { background-color: #007bff; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h3>📦 訂購</h3>
+    <textarea id="orderData" rows="8" placeholder="貼上包含 #店家 的訂購內容..."></textarea>
+    <button class="btn-update" onclick="sendOrder()">確認並更新後台</button>
+</div>
+
+<div class="card">
+    <h3>🔔 產生到貨通知</h3>
+    <input type="text" id="storeName" placeholder="輸入店家名稱" style="width:100%; padding:8px; box-sizing:border-box;">
+    <button class="btn-notice" onclick="sendNoticeRequest()">產生標籤通知文字</button>
+</div>
+
+<script>
+    // 初始化 LIFF
+    liff.init({ liffId: "你的LIFF_ID" }).then(() => {
+        if (!liff.isLoggedIn()) liff.login();
+    });
+
+    // 模式 1 & 2：送出訂單文字給 GAS
+    async function sendOrder() {
+        const text = document.getElementById('orderData').value;
+        if (!text.includes('#')) {
+            alert("請務必包含 #店家名稱");
+            return;
+        }
+
+        try {
+            // 使用 liff.sendMessages 像使用者自己發言一樣
+            await liff.sendMessages([{
+                type: 'text',
+                text: text
+            }]);
+            alert("已傳送！GAS 後台將自動解析。");
+            liff.closeWindow();
+        } catch (error) {
+            console.error('傳送失敗', error);
+        }
+    }
+
+    // 模式 3：要求 GAS 產生到貨通知
+    async function sendNoticeRequest() {
+        const store = document.getElementById('storeName').value;
+        if (!store) {
+            alert("請輸入店家名稱");
+            return;
+        }
+
+        try {
+            await liff.sendMessages([{
+                type: 'text',
+                text: `#${store} 到貨通知`
+            }]);
+            liff.closeWindow();
+        } catch (error) {
+            console.error('傳送失敗', error);
+        }
+    }
+</script>
+</body>
+</html>
